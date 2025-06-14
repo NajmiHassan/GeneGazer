@@ -16,3 +16,20 @@ def apply_pca_umap_clustering(adata):
     sc.tl.umap(adata)
     sc.tl.leiden(adata)
     return adata
+
+
+def compute_top_marker_genes(adata, n_genes=5):
+    if 'leiden' not in adata.obs:
+        raise ValueError("Leiden clusters not found.")
+
+    sc.tl.rank_genes_groups(adata, groupby='leiden', method='t-test')
+    result = sc.get.rank_genes_groups_df(adata, group=None)
+
+    # Get top N genes per cluster
+    top_markers = (
+        result.groupby("group")
+        .head(n_genes)
+        .reset_index(drop=True)
+        .rename(columns={"group": "Cluster", "names": "Gene", "logfoldchanges": "LogFC", "pvals_adj": "Adjusted_pval"})
+    )
+    return top_markers

@@ -3,34 +3,44 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import plotly.express as px
 import pandas as pd
+import plotly.express as px
+import pandas as pd
+import streamlit as st
 
-def plot_umap(adata):
+def plot_umap(adata, gene_for_hover=None):
     label_column = get_best_label_column(adata)
 
-    # Ensure UMAP is already computed
     if 'X_umap' not in adata.obsm:
-        raise ValueError("UMAP has not been computed yet.")
+        raise ValueError("UMAP coordinates not found. Make sure UMAP is computed.")
 
-    # Get UMAP coordinates
-    umap_df = pd.DataFrame(adata.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=adata.obs_names)
-    umap_df[label_column] = adata.obs[label_column].values
+    # Create DataFrame with UMAP + cluster labels
+    df = pd.DataFrame(adata.obsm['X_umap'], columns=['UMAP1', 'UMAP2'], index=adata.obs_names)
+    df[label_column] = adata.obs[label_column].astype(str)
+    df['Cell'] = adata.obs_names
 
-    # Optional: add cell names to hover
-    umap_df['Cell'] = umap_df.index
+    # Add gene expression values (optional)
+    if gene_for_hover and gene_for_hover in adata.var_names:
+        df[f'{gene_for_hover}_expr'] = adata[:, gene_for_hover].X.toarray().flatten()
+    elif gene_for_hover:
+        st.warning(f"Gene `{gene_for_hover}` not found in dataset.")
 
-    # Create interactive Plotly scatter plot
+    # Define hover columns
+    hover_cols = ['Cell', label_column]
+    if gene_for_hover and f'{gene_for_hover}_expr' in df.columns:
+        hover_cols.append(f'{gene_for_hover}_expr')
+
+    # Plot with Plotly
     fig = px.scatter(
-        umap_df,
+        df,
         x='UMAP1',
         y='UMAP2',
         color=label_column,
-        hover_data=['Cell', label_column],
-        title=f"Interactive UMAP: colored by {label_column}",
+        hover_data=hover_cols,
+        title=f"UMAP colored by: {label_column}",
         height=600
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
 
 
 def plot_gene_heatmap(adata, gene):
