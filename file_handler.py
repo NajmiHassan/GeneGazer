@@ -26,7 +26,7 @@ def load_file_dynamic(file, file_type, extra_files=None):
     # --------------------------
     # .csv format (expression matrix)
     # --------------------------
-    
+     
     elif file_type == "csv":
         df = pd.read_csv(file, index_col=0).T
         df = df.apply(pd.to_numeric, errors="coerce")
