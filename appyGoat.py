@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import tempfile
 from file_handler import detect_file_type, load_file_dynamic
 
-
 st.set_page_config(page_title="RNA-seq Viewer", layout="wide")
 
 def load_and_preprocess(adata):
@@ -27,7 +26,7 @@ def apply_pca_umap_clustering(adata):
 st.sidebar.title("Navigation")
 menu = st.sidebar.radio("Select a section:", ["📘 Instructions", "📁 Load Data", "📊 Visualize", "🗂️ All Datasets", "🤖 AI Assistant"])
 
-
+# ------------------------ Instructions Tab ------------------------
 if menu == "📘 Instructions":
     st.title("Single-Cell RNA-seq Viewer")
     st.markdown("""
@@ -44,9 +43,9 @@ This tool lets you explore single-cell RNA-seq data with ease:
 
 Supported formats: `.h5ad`, `.csv`, `.mtx + genes.tsv + barcodes.tsv`
 """)
-
     st.image("https://i.imgur.com/zVfGZkP.png", caption="Example of UMAP visualization")
 
+# ------------------------ Load Data Tab ------------------------
 elif menu == "📁 Load Data":
     st.title("Load RNA-seq Data")
 
@@ -54,40 +53,57 @@ elif menu == "📁 Load Data":
 
     uploaded_file = st.file_uploader("Upload a `.h5ad`, `.csv`, or `.mtx` file", type=["h5ad", "csv", "mtx"])
 
-    extra_genes = st.file_uploader("Upload genes.tsv (for .mtx)", type=["tsv"]) if uploaded_file and uploaded_file.name.endswith("mtx") else None
-    extra_barcodes = st.file_uploader("Upload barcodes.tsv (for .mtx)", type=["tsv"]) if uploaded_file and uploaded_file.name.endswith("mtx") else None
+    extra_genes = None
+    extra_barcodes = None
+    extra = None
+
+    # Show extra file uploaders only if .mtx is uploaded
+    if uploaded_file and uploaded_file.name.endswith("mtx"):
+        st.info("📎 Please upload `genes.tsv` and `barcodes.tsv` to complete `.mtx` input.")
+        extra_genes = st.file_uploader("Upload gene list (.mtx_rows or genes.tsv)", type=["tsv", "txt", "mtx_rows"], key="genes_file")
+        extra_barcodes = st.file_uploader("Upload barcode list (.mtx_cols or barcodes.tsv)", type=["tsv", "txt", "mtx_cols"], key="barcodes_file")
+
 
     if uploaded_file:
-        from file_handler import detect_file_type, load_file_dynamic
-        import tempfile
-
         file_type = detect_file_type(uploaded_file.name)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_type}") as tmp:
-            tmp.write(uploaded_file.read())
-            file_path = tmp.name
+        # Only proceed for supported types
+        if file_type not in ["h5ad", "csv", "mtx"]:
+            st.error("Unsupported file format. Please upload a .h5ad, .csv, or .mtx file.")
+        else:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_type}") as tmp:
+                tmp.write(uploaded_file.read())
+                file_path = tmp.name
 
-        extra = {"genes": extra_genes, "barcodes": extra_barcodes} if file_type == "mtx" else None
+            # Validate mtx requirements
+            if file_type == "mtx":
+                if extra_genes is None or extra_barcodes is None:
+                    st.warning("Please upload both `genes.tsv` and `barcodes.tsv` before processing `.mtx` file.")
+                else:
+                    extra = {"genes": extra_genes, "barcodes": extra_barcodes}
 
-        try:
-            adata = load_file_dynamic(file_path, file_type, extra)
-            adata = load_and_preprocess(adata)
-            adata = apply_pca_umap_clustering(adata)
-            # Save current dataset as active
-            st.session_state['adata'] = adata
+            # If extra is not needed or all .mtx parts are present, proceed
+            if file_type != "mtx" or (file_type == "mtx" and extra is not None):
+                try:
+                    adata = load_file_dynamic(file_path, file_type, extra)
+                    adata = load_and_preprocess(adata)
+                    adata = apply_pca_umap_clustering(adata)
 
-            if 'all_datasets' not in st.session_state:
-             st.session_state['all_datasets'] = []
+                    # Save as active and history
+                    st.session_state['adata'] = adata
+                    if 'all_datasets' not in st.session_state:
+                        st.session_state['all_datasets'] = []
 
-            dataset_label = uploaded_file.name if uploaded_file else "PBMC_3k" if "pbmc3k" in file_path else "Mouse_Brain"
-            st.session_state['all_datasets'].append({
-               "label": dataset_label,
-              "adata": adata
-            })
+                    dataset_label = uploaded_file.name
+                    st.session_state['all_datasets'].append({
+                        "label": dataset_label,
+                        "adata": adata
+                    })
 
-            st.success(f"{file_type.upper()} file loaded and processed successfully!")
-        except Exception as e:
-            st.error(f"Error during processing: {str(e)}")
+                    st.success(f"{file_type.upper()} file loaded and processed successfully!")
+
+                except Exception as e:
+                    st.error(f"Error during processing: {str(e)}")
 
     st.markdown("### Or choose one of the public datasets:")
     col1, col2 = st.columns(2)
@@ -99,6 +115,12 @@ elif menu == "📁 Load Data":
                 adata = load_and_preprocess(adata)
                 adata = apply_pca_umap_clustering(adata)
                 st.session_state['adata'] = adata
+                if 'all_datasets' not in st.session_state:
+                    st.session_state['all_datasets'] = []
+                st.session_state['all_datasets'].append({
+                    "label": "PBMC_3k (Scanpy)",
+                    "adata": adata
+                })
                 st.success("PBMC 3k successfully loaded and processed!")
             except Exception as e:
                 st.error(f"Error loading PBMC 3k: {str(e)}")
@@ -110,21 +132,29 @@ elif menu == "📁 Load Data":
                 adata = load_and_preprocess(adata)
                 adata = apply_pca_umap_clustering(adata)
                 st.session_state['adata'] = adata
+                if 'all_datasets' not in st.session_state:
+                    st.session_state['all_datasets'] = []
+                st.session_state['all_datasets'].append({
+                    "label": "Mouse_Brain_Cortex_1k (Scanpy)",
+                    "adata": adata
+                })
                 st.success("Mouse brain cortex successfully loaded and processed!")
             except Exception as e:
                 st.error(f"Error loading mouse brain cortex: {str(e)}")
 
+
+# ------------------------ Visualize Tab ------------------------
 elif menu == "📊 Visualize":
     st.title("Visualizations")
 
     if 'adata' not in st.session_state:
-        st.warning("Please load a file from the 'Load Data' tab.")
+        st.warning("Please load a dataset from the 'Load Data' tab.")
     else:
         adata = st.session_state['adata']
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("UMAP Visualization")
+            st.subheader("UMAP Clustering")
             sc.pl.umap(adata, color='leiden', show=False)
             st.pyplot(plt.gcf())
 
@@ -135,29 +165,9 @@ elif menu == "📊 Visualize":
                 sc.pl.matrixplot(adata, var_names=[gene], groupby="leiden", cmap="viridis", use_raw=False, show=False)
                 st.pyplot(plt.gcf())
             else:
-                st.error("Gene not found.")
+                st.error("Gene not found in dataset.")
 
-elif menu == "🤖 AI Assistant":
-    st.title("AI Assistant: Ask about RNA-seq")
-
-    with st.chat_message("assistant"):
-        st.markdown("Hi! Ask anything about RNA-seq, genes, or how to use this tool!")
-
-    question = st.chat_input("Type your question here...")
-    if question:
-        with st.chat_message("user"):
-            st.markdown(question)
-
-        with st.chat_message("assistant"):
-            if "gene" in question.lower():
-                st.markdown("A gene is a DNA sequence that contains instructions to produce proteins.")
-            elif "umap" in question.lower():
-                st.markdown("UMAP is a technique that reduces complex data into 2D for easier visualization.")
-            elif "h5ad" in question.lower():
-                st.markdown("`.h5ad` is a file format used by Scanpy to store gene expression data.")
-            else:
-                st.markdown("I'm a simple assistant, but I can help with basic RNA-seq questions.")
-
+# ------------------------ All Datasets Tab ------------------------
 elif menu == "🗂️ All Datasets":
     st.title("Previously Uploaded Datasets")
 
@@ -181,8 +191,27 @@ elif menu == "🗂️ All Datasets":
         else:
             st.warning("Gene not found in this dataset.")
 
+# ------------------------ AI Assistant ------------------------
+elif menu == "🤖 AI Assistant":
+    st.title("AI Assistant: Ask about RNA-seq")
 
+    with st.chat_message("assistant"):
+        st.markdown("Hi! Ask anything about RNA-seq, genes, or how to use this tool!")
+
+    question = st.chat_input("Type your question here...")
+    if question:
+        with st.chat_message("user"):
+            st.markdown(question)
+
+        with st.chat_message("assistant"):
+            if "gene" in question.lower():
+                st.markdown("A gene is a DNA sequence that contains instructions to produce proteins.")
+            elif "umap" in question.lower():
+                st.markdown("UMAP is a technique that reduces complex data into 2D for easier visualization.")
+            elif "h5ad" in question.lower():
+                st.markdown("`.h5ad` is a file format used by Scanpy to store gene expression data.")
+            else:
+                st.markdown("I'm a simple assistant, but I can help with basic RNA-seq questions.")
 
 st.markdown("---")
-st.info("Let's shine in this hackathon, team Goat!")
-
+st.info("Let's shine in this hackathon, team Goat! 🐐")
