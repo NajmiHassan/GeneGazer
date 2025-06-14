@@ -1,5 +1,6 @@
 import streamlit as st
-from ui_utils import render_instructions, render_load_data, render_ai_assistant
+from ai_assistant import GeminiAssistant
+from ui_utils import render_instructions, render_load_data
 from visualization_ui import render_visualization
 
 # Set page config
@@ -27,7 +28,7 @@ with tab3:
     render_visualization()
 
 with tab4:
-    render_ai_assistant()
+    GeminiAssistant().render_ai_assistant_tab()
 
 # Optional footer
 st.markdown("---")
