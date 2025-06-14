@@ -2,7 +2,7 @@ import streamlit as st
 from ui_utils import (
     render_instructions,
     render_load_data,
-    render_visualization,
+    render_visualizationTab,
     render_ai_assistant
 )
 
@@ -20,7 +20,7 @@ elif menu == "📁 Load Data":
     render_load_data()
 
 elif menu == "📊 Visualize":
-    render_visualization()
+    render_visualizationTab()
 
 elif menu == "🤖 AI Assistant":
     render_ai_assistant()
