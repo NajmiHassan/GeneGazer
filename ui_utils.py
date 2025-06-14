@@ -2,7 +2,7 @@ import streamlit as st
 import tempfile
 from file_handler import detect_file_type, load_file_dynamic, get_csv_download_link
 from sc_processing import load_and_preprocess, apply_pca_umap_clustering
-from visualizer import plot_umap, plot_gene_heatmap
+from visualizer import plot_umap, plot_gene_heatmap, get_best_label_column
 import scanpy as sc
 
 def render_instructions():
@@ -98,24 +98,27 @@ def render_load_data():
             except Exception as e:
                 st.error(str(e))
 
-
 def render_visualization():
     st.title("Visualizations")
+    
     if 'adata' not in st.session_state:
-        st.warning("Please load a dataset.")
+        st.warning("Please load a dataset from the 'Load Data' tab.")
         return
 
     adata = st.session_state['adata']
-    col1, col2 = st.columns(2)
+    
+    # 📌 Auto-detect best label column (cell_type, bulk_labels, or fallback)
+    label_column = get_best_label_column(adata)
+    st.caption(f"UMAP is colored by: **{label_column}**")
 
-    with col1:
-        st.subheader("UMAP Clustering")
-        plot_umap(adata)
+    # UMAP plot
+    st.subheader("UMAP Clustering")
+    plot_umap(adata)
 
-    with col2:
-        st.subheader("Gene Heatmap")
-        gene = st.text_input("Enter gene name:", "IL7R")
-        plot_gene_heatmap(adata, gene)
+    # Gene heatmap input
+    st.subheader("Gene Heatmap")
+    gene = st.text_input("Enter a gene name:", "IL7R")
+    plot_gene_heatmap(adata, gene)
 
 
 def render_all_datasets():
