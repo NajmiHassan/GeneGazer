@@ -1,127 +1,131 @@
 import streamlit as st
 import scanpy as sc
 import matplotlib.pyplot as plt
-import seaborn as sns
 import tempfile
-import os
-import requests
 
-st.set_page_config(page_title="🔬 RNA-seq Viewer", layout="wide")
+st.set_page_config(page_title="Visualizador RNA-seq", layout="wide")
 
-# ======= SIDEBAR ========
-st.sidebar.title("🔍 Navigation")
-menu = st.sidebar.radio("Choose a section:", ["📘 Instructions", "📁 Load Data", "📊 Visualize", "🤖 AI Agent"])
-st.sidebar.markdown("---")
-st.sidebar.info("Developed at TraeIA Hackathon 🧠")
+def carregar_e_preprocessar(adata):
+    sc.pp.filter_cells(adata, min_genes=200)
+    sc.pp.filter_genes(adata, min_cells=3)
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    adata = adata[:, adata.var.highly_variable]
+    sc.pp.scale(adata, max_value=10)
+    return adata
 
-# ======= INSTRUCTIONS ========
-if menu == "📘 Instructions":
-    st.title("🧬 Single-Cell RNA-seq Viewer")
+def aplicar_pca_umap_cluster(adata):
+    sc.tl.pca(adata, svd_solver='arpack')
+    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+    sc.tl.umap(adata)
+    sc.tl.leiden(adata)
+    return adata
+
+st.sidebar.title("Navegação")
+menu = st.sidebar.radio("Escolha uma seção:", ["📘 Instruções", "📁 Carregar Dados", "📊 Visualizar", "🤖 Agente de IA"])
+
+if menu == "📘 Instruções":
+    st.title("Visualizador de RNA-seq de Célula Única")
     st.markdown("""
-    This tool allows you to easily explore single-cell RNA-seq data:
+    Esta ferramenta permite explorar dados de RNA-seq de célula única de forma simples:
 
-    1. Go to **\"Load Data\"** and upload your `.h5ad` file or use our example dataset.
-    2. Go to **\"Visualize\"** to generate interactive plots:
-        - Clustering plot (UMAP)
-        - Gene expression heatmap
-    3. Use the **\"AI Agent\"** tab to ask questions.
+    1. Vá até **Carregar Dados** e envie um arquivo `.h5ad` ou use um dataset de exemplo.
+    2. Vá até **Visualizar** para gerar gráficos interativos:
+       - Agrupamento (UMAP)
+       - Mapa de calor por gene
+    3. Use o **Agente de IA** para tirar dúvidas.
 
-    #### Accepted format:
-    - `.h5ad` files exported from **Scanpy** or **Seurat**
+    **Formato aceito**:
+    Arquivos `.h5ad` exportados pelo Scanpy ou Seurat.
     """)
-    st.image("https://i.imgur.com/zVfGZkP.png", caption="Example of UMAP visualization")
+    st.image("https://i.imgur.com/zVfGZkP.png", caption="Exemplo de visualização UMAP")
 
-# ======= LOAD DATA ========
-elif menu == "📁 Load Data":
-    st.title("📤 Load RNA-seq Data")
+elif menu == "📁 Carregar Dados":
+    st.title("Carregar Dados de RNA-seq")
 
-    uploaded_file = st.file_uploader("Upload a `.h5ad` file", type=["h5ad"])
-    if uploaded_file:
+    arquivo_enviado = st.file_uploader("Envie um arquivo `.h5ad`", type=["h5ad"])
+    if arquivo_enviado:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".h5ad") as tmp:
-            tmp.write(uploaded_file.read())
-            temp_path = tmp.name
-        st.session_state['adata'] = sc.read_h5ad(temp_path)
-        st.success("File loaded successfully!")
+            tmp.write(arquivo_enviado.read())
+            caminho_temp = tmp.name
+        try:
+            adata = sc.read_h5ad(caminho_temp)
+            adata = carregar_e_preprocessar(adata)
+            adata = aplicar_pca_umap_cluster(adata)
+            st.session_state['adata'] = adata
+            st.success("Arquivo carregado e processado com sucesso!")
+        except Exception as e:
+            st.error(f"Erro durante o processamento: {str(e)}")
 
-    st.markdown("### Or choose one of the public datasets:")
+    st.markdown("### Ou escolha um dos conjuntos de dados públicos:")
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("🔬 Use PBMC 3k"):
-            url = "https://figshare.com/ndownloader/files/28125275"
+        if st.button("Usar PBMC 3k (Scanpy)"):
             try:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".h5ad") as tmp:
-                    response = requests.get(url)
-                    tmp.write(response.content)
-                    temp_path = tmp.name
-                st.session_state['adata'] = sc.read_h5ad(temp_path)
-                st.success("PBMC 3k loaded successfully!")
+                adata = sc.datasets.pbmc3k()
+                adata = carregar_e_preprocessar(adata)
+                adata = aplicar_pca_umap_cluster(adata)
+                st.session_state['adata'] = adata
+                st.success("PBMC 3k carregado e processado!")
             except Exception as e:
-                st.error(f"Error: {str(e)}")
+                st.error(f"Erro ao carregar PBMC 3k: {str(e)}")
 
     with col2:
-        if st.button("🧠 Use Mouse Brain (subsampled)"):
-            url = "https://github.com/scverse/scvi-tools/raw/main/tests/data/mouse_brain_subsampled.h5ad"
+        if st.button("Usar Cérebro de Camundongo (Scanpy)"):
             try:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".h5ad") as tmp:
-                    response = requests.get(url)
-                    tmp.write(response.content)
-                    temp_path = tmp.name
-                st.session_state['adata'] = sc.read_h5ad(temp_path)
-                st.success("Mouse Brain (subsampled) loaded successfully!")
+                adata = sc.datasets.mouse_brain_cortex_1k()
+                adata = carregar_e_preprocessar(adata)
+                adata = aplicar_pca_umap_cluster(adata)
+                st.session_state['adata'] = adata
+                st.success("Cérebro de camundongo carregado e processado!")
             except Exception as e:
-                st.error(f"Error: {str(e)}")
+                st.error(f"Erro ao carregar cérebro de camundongo: {str(e)}")
 
-# ======= VISUALIZE ========
-elif menu == "📊 Visualize":
-    st.title("📈 Visualizations")
+elif menu == "📊 Visualizar":
+    st.title("Visualizações")
 
     if 'adata' not in st.session_state:
-        st.warning("⚠️ Please upload a file in the 'Load Data' tab first.")
+        st.warning("Por favor, carregue um arquivo na aba 'Carregar Dados'.")
     else:
         adata = st.session_state['adata']
-
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("🔵 UMAP")
-            sc.pp.neighbors(adata)
-            sc.tl.umap(adata)
-            sc.tl.leiden(adata)
+            st.subheader("Visualização UMAP")
             sc.pl.umap(adata, color='leiden', show=False)
             st.pyplot(plt.gcf())
 
         with col2:
-            st.subheader("🔥 Heatmap")
-            gene = st.text_input("Enter a gene name to visualize:", "IL7R")
+            st.subheader("Mapa de Calor por Gene")
+            gene = st.text_input("Digite o nome de um gene:", "IL7R")
             if gene in adata.var_names:
                 sc.pl.matrixplot(adata, var_names=[gene], groupby="leiden", cmap="viridis", use_raw=False, show=False)
                 st.pyplot(plt.gcf())
             else:
-                st.error("Gene not found.")
+                st.error("Gene não encontrado.")
 
-# ======= SIMPLE AI AGENT ========
-elif menu == "🤖 AI Agent":
-    st.title("🤖 AI Agent: Help and Explanations")
+elif menu == "🤖 Agente de IA":
+    st.title("Agente de IA: Pergunte sobre RNA-seq")
 
     with st.chat_message("assistant"):
-        st.markdown("Hi! Ask me anything about RNA-seq, genes, or how to use this tool!")
+        st.markdown("Olá! Pergunte qualquer coisa sobre RNA-seq, genes ou como usar esta ferramenta!")
 
-    user_input = st.chat_input("Type your question here...")
-    if user_input:
+    pergunta = st.chat_input("Digite sua pergunta aqui...")
+    if pergunta:
         with st.chat_message("user"):
-            st.markdown(user_input)
+            st.markdown(pergunta)
 
         with st.chat_message("assistant"):
-            if "gene" in user_input.lower():
-                st.markdown("🧬 A gene is a DNA sequence that contains instructions for making proteins.")
-            elif "umap" in user_input.lower():
-                st.markdown("🔵 UMAP is a dimensionality reduction technique that helps visualize complex data in 2D.")
-            elif "h5ad" in user_input.lower():
-                st.markdown("📁 `.h5ad` file is a format used by Scanpy to store gene expression data.")
+            if "gene" in pergunta.lower():
+                st.markdown("Um gene é uma sequência de DNA que contém instruções para produzir proteínas.")
+            elif "umap" in pergunta.lower():
+                st.markdown("UMAP é uma técnica que reduz dados complexos para 2D e facilita a visualização.")
+            elif "h5ad" in pergunta.lower():
+                st.markdown("O formato `.h5ad` é usado pelo Scanpy para armazenar dados de expressão genética.")
             else:
-                st.markdown("Sorry, I'm still a simple agent 😅 — but I can help with basic questions!")
+                st.markdown("Sou um agente simples, mas posso ajudar com perguntas básicas sobre RNA-seq.")
 
-# Footer
 st.markdown("---")
-st.info("Just say the word. Let’s shine at this hackathon, Goat! 🚀🧠")
+st.info("Vamos brilhar nesse hackathon, equipe Goat!")
