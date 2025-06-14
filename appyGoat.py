@@ -25,7 +25,8 @@ def apply_pca_umap_clustering(adata):
     return adata
 
 st.sidebar.title("Navigation")
-menu = st.sidebar.radio("Select a section:", ["📘 Instructions", "📁 Load Data", "📊 Visualize", "🤖 AI Assistant"])
+menu = st.sidebar.radio("Select a section:", ["📘 Instructions", "📁 Load Data", "📊 Visualize", "🗂️ All Datasets", "🤖 AI Assistant"])
+
 
 if menu == "📘 Instructions":
     st.title("Single-Cell RNA-seq Viewer")
@@ -72,7 +73,18 @@ elif menu == "📁 Load Data":
             adata = load_file_dynamic(file_path, file_type, extra)
             adata = load_and_preprocess(adata)
             adata = apply_pca_umap_clustering(adata)
+            # Save current dataset as active
             st.session_state['adata'] = adata
+
+            if 'all_datasets' not in st.session_state:
+             st.session_state['all_datasets'] = []
+
+            dataset_label = uploaded_file.name if uploaded_file else "PBMC_3k" if "pbmc3k" in file_path else "Mouse_Brain"
+            st.session_state['all_datasets'].append({
+               "label": dataset_label,
+              "adata": adata
+            })
+
             st.success(f"{file_type.upper()} file loaded and processed successfully!")
         except Exception as e:
             st.error(f"Error during processing: {str(e)}")
@@ -101,8 +113,6 @@ elif menu == "📁 Load Data":
                 st.success("Mouse brain cortex successfully loaded and processed!")
             except Exception as e:
                 st.error(f"Error loading mouse brain cortex: {str(e)}")
-
-
 
 elif menu == "📊 Visualize":
     st.title("Visualizations")
@@ -147,6 +157,31 @@ elif menu == "🤖 AI Assistant":
                 st.markdown("`.h5ad` is a file format used by Scanpy to store gene expression data.")
             else:
                 st.markdown("I'm a simple assistant, but I can help with basic RNA-seq questions.")
+
+elif menu == "🗂️ All Datasets":
+    st.title("Previously Uploaded Datasets")
+
+    if 'all_datasets' not in st.session_state or len(st.session_state['all_datasets']) == 0:
+        st.warning("No datasets uploaded yet.")
+    else:
+        dataset_names = [ds['label'] for ds in st.session_state['all_datasets']]
+        selected_label = st.selectbox("Choose a dataset to view:", dataset_names)
+
+        selected_dataset = next(ds for ds in st.session_state['all_datasets'] if ds['label'] == selected_label)
+        adata = selected_dataset['adata']
+
+        st.subheader(f"UMAP for: {selected_label}")
+        sc.pl.umap(adata, color='leiden', show=False)
+        st.pyplot(plt.gcf())
+
+        gene = st.text_input("Enter a gene name to plot:", "IL7R")
+        if gene in adata.var_names:
+            sc.pl.matrixplot(adata, var_names=[gene], groupby="leiden", cmap="viridis", use_raw=False, show=False)
+            st.pyplot(plt.gcf())
+        else:
+            st.warning("Gene not found in this dataset.")
+
+
 
 st.markdown("---")
 st.info("Let's shine in this hackathon, team Goat!")
