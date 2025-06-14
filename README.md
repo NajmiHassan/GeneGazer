@@ -28,8 +28,7 @@ This is a user-friendly web app built with **Streamlit** and **Scanpy** for expl
 ├── file_handler.py       # Detect and load different file formats
 ├── sc_processing.py      # Preprocessing and clustering pipeline
 ├── README.md             # This file
-├── requirements.txt      # Required Python packages
-└── TestingData/          # Testing files to test different file types. 
+├── requirements.txt      # Required Python packages 
 └── Date/                 # Public Datasets for testing.  
 ```
 
@@ -72,6 +71,15 @@ streamlit run app.py
 ```
 
 It will open the application in your browser at `http://localhost:8501`.
+
+
+---
+
+## 📥 Download Testing Data
+
+- **MTX File Type and Supported Files:** [Download](https://www.ebi.ac.uk/gxa/sc/experiment/E-MTAB-10371/download/zip?fileType=normalised&accessKey=)
+- **CSV File Type:** [Download](https://storage.googleapis.com/kaggle-data-sets/1584326/2606779/compressed/brain_counts.csv.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20250614%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250614T080124Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=de63917d3fe6236b05a2c7d194fed8be2136daeec7cb2e557bf6804cfb9a2f5388cc13d1f6fc4088c28a1bcff274018380bd23d838c60860494d90d4ffe921d2531d228a983e54d50ba1c675f8186763c9678a8164d6b11504ed089d41d2e4a586744c6fd8edb7af5d0974800d00cbde1909d1a37ab7ebb7cae54a6c64089dc8ff1b07c515a87514e9a7bf7c962c968fb604262d7a4138d88188df8a81463eea78a6eb1fb3d6c77bdf3ea6071e47d2e80e74e4e1fd3269a084d19ad684b608efe6fc7f534bcb30d8d917dde66eeb0424987b81187a9a6273a1a8fab088fb08714a876dfb617db6527da90cdef7210cdb4ef6346a15e0085c4605c1ca620e853b)
+- **H5ad File Type:** [Download](https://storage.googleapis.com/kaggle-data-sets/1584326/2606779/compressed/glioblastoma_normalized.h5ad.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20250614%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250614T062652Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=8ce6b9f4169cd46ab3e9bd0a9bd6bb846cac6a65fbb3f3d27acb1f17c0ffcd2a2e7f6449776ce2b1f73c0a50f63911197bebd291d6d2030a53d876f21aa41949ffef915c97044cc30d6f42cfcbf2d916401a6425c94ee0f42e77f1c60949449198a6c711d14fea6df317c10f283a0d152bcb0072c3a72205ba47eadb6424c6ad4a1cf1ef663827e0030f6c7c3fb0f1185ee1c348d7bb8be297ca756809a0426bbc5571f74e5f2d9047e88bf916f5fb0095102fe47d47c3b953dd347d968d4d3b502a51d5c3494ef32ce5dd43825f72fdfd0d2b896627d5e3d7378a8aefbf6eea07f967de872686da0610d03b399375db157ac3fb295d21139d6147060f6a2e58)
 
 ---
 
