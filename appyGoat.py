@@ -126,21 +126,24 @@ elif menu == "📁 Load Data":
                 st.error(f"Error loading PBMC 3k: {str(e)}")
 
     with col2:
-        if st.button("Use Mouse Brain Cortex (Scanpy)"):
+        if st.button("Use Paul15 (Scanpy)"):
             try:
-                adata = sc.datasets.mouse_brain_cortex_1k()
+                adata = sc.datasets.paul15()
                 adata = load_and_preprocess(adata)
                 adata = apply_pca_umap_clustering(adata)
                 st.session_state['adata'] = adata
+
                 if 'all_datasets' not in st.session_state:
                     st.session_state['all_datasets'] = []
+
                 st.session_state['all_datasets'].append({
-                    "label": "Mouse_Brain_Cortex_1k (Scanpy)",
-                    "adata": adata
-                })
-                st.success("Mouse brain cortex successfully loaded and processed!")
+                 "label": "Paul15",
+                 "adata": adata
+             })
+
+                st.success("Paul15 dataset successfully loaded and processed!")
             except Exception as e:
-                st.error(f"Error loading mouse brain cortex: {str(e)}")
+                st.error(f"Error loading Paul15: {str(e)}")
 
 
 # ------------------------ Visualize Tab ------------------------
