@@ -1,29 +1,34 @@
 import streamlit as st
-from ui_utils import (
-    render_instructions,
-    render_load_data,
-    render_visualizationTab,
-    render_ai_assistant
-)
+from ui_utils import render_instructions, render_load_data, render_ai_assistant
+from visualization_ui import render_visualization
 
-st.set_page_config(page_title="RNA-seq Viewer", layout="wide")
+# Set page config
+st.set_page_config(page_title="GeneGazer", layout="wide")
 
-st.sidebar.title("Navigation")
-menu = st.sidebar.radio("Select a section:", [
-    "📘 Instructions", "📁 Load Data", "📊 Visualize", "🤖 AI Assistant"
+# Project title and tagline
+st.title("🧬 GeneGazer: Interactive Single-Cell RNA-seq Explorer")
+st.caption("Visualize, explore, and analyze single-cell data effortlessly.")
+
+# Main tab navigation
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📘 Instructions", 
+    "📁 Load Data", 
+    "📊 Visualize", 
+    "🤖 AI Assistant"
 ])
 
-if menu == "📘 Instructions":
+with tab1:
     render_instructions()
 
-elif menu == "📁 Load Data":
+with tab2:
     render_load_data()
 
-elif menu == "📊 Visualize":
-    render_visualizationTab()
+with tab3:
+    render_visualization()
 
-elif menu == "🤖 AI Assistant":
+with tab4:
     render_ai_assistant()
 
+# Optional footer
 st.markdown("---")
-st.info("Let's shine in this hackathon, team Goat! 🐐")
+st.info("Made by Team GOAT 🧬")

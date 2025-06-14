@@ -80,7 +80,7 @@ def render_load_data():
                     "label": "PBMC_3k (Scanpy)",
                     "adata": adata
                 })
-                st.success("PBMC 3k loaded!")
+                st.success("PBMC 3k loaded! Now Move to the Visualize tab.")
             except Exception as e:
                 st.error(str(e))
 
@@ -95,7 +95,7 @@ def render_load_data():
                     "label": "Paul15",
                     "adata": adata
                 })
-                st.success("Paul15 loaded!")
+                st.success("Paul15 loaded! Now Move to the Visualize tab.")
             except Exception as e:
                 st.error(str(e))
 
