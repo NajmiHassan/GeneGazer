@@ -2,6 +2,8 @@ import streamlit as st
 import scanpy as sc
 import matplotlib.pyplot as plt
 import tempfile
+from file_handler import detect_file_type, load_file_dynamic
+
 
 st.set_page_config(page_title="RNA-seq Viewer", layout="wide")
 
@@ -28,33 +30,50 @@ menu = st.sidebar.radio("Select a section:", ["📘 Instructions", "📁 Load Da
 if menu == "📘 Instructions":
     st.title("Single-Cell RNA-seq Viewer")
     st.markdown("""
-    This tool lets you explore single-cell RNA-seq data with ease:
+This tool lets you explore single-cell RNA-seq data with ease:
 
-    1. Go to **Load Data** and upload a `.h5ad` file or use a sample dataset.
-    2. Go to **Visualize** to generate interactive plots:
-       - Clustering (UMAP)
-       - Gene heatmap
-    3. Use the **AI Assistant** to ask questions.
+1. Go to **Load Data** and upload any of the following:
+   - `.h5ad` file (Scanpy)
+   - `.csv` gene expression matrix (cells in columns, genes in rows)
+   - `.mtx` + `genes.tsv` + `barcodes.tsv` (10x Genomics)
+2. Go to **Visualize** to generate:
+   - UMAP plots
+   - Gene heatmaps
+3. Use the **AI Assistant** to ask about RNA-seq.
 
-    **Accepted format**:
-    `.h5ad` files exported from Scanpy or Seurat.
-    """)
+Supported formats: `.h5ad`, `.csv`, `.mtx + genes.tsv + barcodes.tsv`
+""")
+
     st.image("https://i.imgur.com/zVfGZkP.png", caption="Example of UMAP visualization")
 
 elif menu == "📁 Load Data":
     st.title("Load RNA-seq Data")
 
-    uploaded_file = st.file_uploader("Upload a `.h5ad` file", type=["h5ad"])
+    st.markdown("### Upload your data file")
+
+    uploaded_file = st.file_uploader("Upload a `.h5ad`, `.csv`, or `.mtx` file", type=["h5ad", "csv", "mtx"])
+
+    extra_genes = st.file_uploader("Upload genes.tsv (for .mtx)", type=["tsv"]) if uploaded_file and uploaded_file.name.endswith("mtx") else None
+    extra_barcodes = st.file_uploader("Upload barcodes.tsv (for .mtx)", type=["tsv"]) if uploaded_file and uploaded_file.name.endswith("mtx") else None
+
     if uploaded_file:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".h5ad") as tmp:
+        from file_handler import detect_file_type, load_file_dynamic
+        import tempfile
+
+        file_type = detect_file_type(uploaded_file.name)
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_type}") as tmp:
             tmp.write(uploaded_file.read())
-            temp_path = tmp.name
+            file_path = tmp.name
+
+        extra = {"genes": extra_genes, "barcodes": extra_barcodes} if file_type == "mtx" else None
+
         try:
-            adata = sc.read_h5ad(temp_path)
+            adata = load_file_dynamic(file_path, file_type, extra)
             adata = load_and_preprocess(adata)
             adata = apply_pca_umap_clustering(adata)
             st.session_state['adata'] = adata
-            st.success("File successfully loaded and processed!")
+            st.success(f"{file_type.upper()} file loaded and processed successfully!")
         except Exception as e:
             st.error(f"Error during processing: {str(e)}")
 
@@ -82,6 +101,8 @@ elif menu == "📁 Load Data":
                 st.success("Mouse brain cortex successfully loaded and processed!")
             except Exception as e:
                 st.error(f"Error loading mouse brain cortex: {str(e)}")
+
+
 
 elif menu == "📊 Visualize":
     st.title("Visualizations")
