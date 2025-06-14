@@ -4,6 +4,7 @@ import os
 import tempfile
 from scipy import io
 import anndata as ad
+import base64
 
 def detect_file_type(file_name):
     if file_name.endswith(".h5ad"):
@@ -25,6 +26,21 @@ def load_file_dynamic(file, file_type, extra_files=None):
     # --------------------------
     # .csv format (expression matrix)
     # --------------------------
+    
+    elif file_type == "csv":
+        df = pd.read_csv(file, index_col=0).T
+        df = df.apply(pd.to_numeric, errors="coerce")
+        df = df.dropna(axis=1, how="any")
+
+        if df.empty or df.shape[1] == 0:
+            raise ValueError("CSV file has no valid numeric gene expression columns.")
+        if df.sum().sum() == 0:
+            raise ValueError("CSV file contains only zero values.")
+
+        return sc.AnnData(df)
+
+    
+    
     elif file_type == "csv":
         df = pd.read_csv(file, index_col=0).T  # cells × genes
         try:
@@ -91,3 +107,15 @@ def load_file_dynamic(file, file_type, extra_files=None):
     # --------------------------
     else:
         raise ValueError("Unsupported or incomplete file format. Please upload a .h5ad, .csv, or .mtx with metadata.")
+
+def get_csv_download_link():
+    df = pd.DataFrame({
+        "Cell1": [5, 2, 3],
+        "Cell2": [1, 7, 5],
+        "Cell3": [2, 4, 1]
+    }, index=["GeneA", "GeneB", "GeneC"])
+    
+    csv = df.to_csv(index=True)
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" download="scRNA_seq_template.csv">📥 Download Valid CSV Template</a>'
+    return href

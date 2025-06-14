@@ -2,7 +2,7 @@ import streamlit as st
 import scanpy as sc
 import matplotlib.pyplot as plt
 import tempfile
-from file_handler import detect_file_type, load_file_dynamic
+from file_handler import detect_file_type, load_file_dynamic, get_csv_download_link
 
 st.set_page_config(page_title="RNA-seq Viewer", layout="wide")
 
@@ -43,6 +43,7 @@ This tool lets you explore single-cell RNA-seq data with ease:
 
 Supported formats: `.h5ad`, `.csv`, `.mtx + genes.tsv + barcodes.tsv`
 """)
+    st.markdown(get_csv_download_link(), unsafe_allow_html=True)
     st.image("https://i.imgur.com/zVfGZkP.png", caption="Example of UMAP visualization")
 
 # ------------------------ Load Data Tab ------------------------
