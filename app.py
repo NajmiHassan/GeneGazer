@@ -3,7 +3,6 @@ from ui_utils import (
     render_instructions,
     render_load_data,
     render_visualization,
-    render_all_datasets,
     render_ai_assistant
 )
 
@@ -11,7 +10,7 @@ st.set_page_config(page_title="RNA-seq Viewer", layout="wide")
 
 st.sidebar.title("Navigation")
 menu = st.sidebar.radio("Select a section:", [
-    "📘 Instructions", "📁 Load Data", "📊 Visualize", "🗂️ All Datasets", "🤖 AI Assistant"
+    "📘 Instructions", "📁 Load Data", "📊 Visualize", "🤖 AI Assistant"
 ])
 
 if menu == "📘 Instructions":

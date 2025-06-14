@@ -45,20 +45,24 @@ def plot_umap(adata, gene_for_hover=None):
 
 def plot_gene_heatmap(adata, gene):
     if gene in adata.var_names:
+        # Clear previous plot to avoid overlap
+        plt.clf()
+
+        # Create heatmap with smaller figure size
         sc.pl.matrixplot(
             adata,
             var_names=[gene],
             groupby="leiden",
             cmap="viridis",
-            standard_scale="var",  # normalize per gene
             use_raw=False,
+            standard_scale="var",
+            dendrogram=False,
+            figsize=(6, 2),  # ⬅️ smaller width & height to fit screen
             show=False
         )
         st.pyplot(plt.gcf())
     else:
-        st.warning("Gene not found.")
-
-
+        st.warning("Gene not found in dataset.")
 
 def get_best_label_column(adata):
     # Priority list of known label columns
