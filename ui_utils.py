@@ -100,24 +100,30 @@ def render_load_data():
             except Exception as e:
                 st.error(str(e))
 
-
 def render_visualization():
     st.title("📊 Visualizations")
 
-    if 'adata' not in st.session_state:
-        st.warning("Please load a dataset first from the 'Load Data' tab.")
+    # Check if any dataset was uploaded
+    all_datasets = st.session_state.get('all_datasets', [])
+    if not all_datasets:
+        st.warning("No datasets uploaded yet. Please upload one in the 'Load Data' tab.")
         return
 
-    adata = st.session_state['adata']
-    label_column = get_best_label_column(adata)
+    # Dropdown to switch datasets
+    dataset_names = [ds['label'] for ds in all_datasets]
+    selected_label = st.selectbox("Select a dataset to view:", dataset_names)
 
-    # Display current labeling info
+    selected_dataset = next(ds for ds in all_datasets if ds['label'] == selected_label)
+    st.session_state['adata'] = selected_dataset['adata']
+    adata = st.session_state['adata']
+
+    label_column = get_best_label_column(adata)
     st.caption(f"UMAP is colored by: **{label_column}**")
 
-    # 1️⃣ Gene Expression on Hover (optional)
+    # 1️⃣ UMAP with hover gene expression
     st.subheader("🔍 Interactive UMAP")
     gene_for_hover = st.text_input(
-        "Optional: Enter a gene to view its expression level on hover (e.g., IL7R)", 
+        "Optional: Enter a gene to view its expression level on hover (e.g., IL7R)",
         value=""
     )
     plot_umap(adata, gene_for_hover if gene_for_hover else None)
@@ -130,31 +136,10 @@ def render_visualization():
         except Exception as e:
             st.warning(f"Could not compute markers: {str(e)}")
 
-    # 3️⃣ Heatmap Section
+    # 3️⃣ Gene Heatmap
     st.subheader("🎯 Gene Heatmap (by Cluster)")
     gene = st.text_input("Enter a gene to show expression heatmap:", "IL7R")
     plot_gene_heatmap(adata, gene)
-
-
-
-def render_all_datasets():
-    st.title("Previously Uploaded Datasets")
-
-    datasets = st.session_state.get('all_datasets', [])
-    if not datasets:
-        st.warning("No datasets uploaded.")
-        return
-
-    labels = [ds['label'] for ds in datasets]
-    selected = st.selectbox("Choose a dataset:", labels)
-    adata = next(ds['adata'] for ds in datasets if ds['label'] == selected)
-
-    st.subheader(f"UMAP for {selected}")
-    plot_umap(adata)
-
-    gene = st.text_input("Enter gene to plot:", "IL7R")
-    plot_gene_heatmap(adata, gene)
-
 
 def render_ai_assistant():
     st.title("AI Assistant: Ask about RNA-seq")

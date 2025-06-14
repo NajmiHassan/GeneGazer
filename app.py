@@ -23,9 +23,6 @@ elif menu == "📁 Load Data":
 elif menu == "📊 Visualize":
     render_visualization()
 
-elif menu == "🗂️ All Datasets":
-    render_all_datasets()
-
 elif menu == "🤖 AI Assistant":
     render_ai_assistant()
 
