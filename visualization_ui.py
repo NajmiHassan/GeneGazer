@@ -18,38 +18,31 @@ def render_dataset_selector():
 def render_umap_section(adata):
     st.subheader("🔍 Interactive UMAP")
 
-    if "hover_gene_limit" not in st.session_state:
-        st.session_state["hover_gene_limit"] = 10
+    # Sorted full list of genes
+    gene_options = sorted(list(adata.var_names))
 
-    all_genes = list(adata.var_names)
-    limit = st.session_state["hover_gene_limit"]
-    gene_options = all_genes[:limit]
-
-    hover_gene = st.selectbox("Select a gene to highlight on hover (optional):", [""] + gene_options)
-
-    if limit < len(all_genes):
-        if st.button("🔄 Load More Hover Genes"):
-            st.session_state["hover_gene_limit"] += 10
+    hover_gene = st.selectbox(
+        "🔎 Type or select a gene to highlight on hover (optional):",
+        options=[""] + gene_options  # empty for "None"
+    )
 
     plot_umap(adata, hover_gene if hover_gene else None)
+
 
 def render_gene_heatmap_section(adata):
     st.subheader("🎯 Gene Heatmap (by Cluster)")
 
-    if "gene_limit" not in st.session_state:
-        st.session_state["gene_limit"] = 10
+    # Sorted full list of genes
+    gene_options = sorted(list(adata.var_names))
 
-    all_genes = list(adata.var_names)
-    limit = st.session_state["gene_limit"]
-    gene_options = all_genes[:limit]
-
-    gene = st.selectbox("Select a gene to visualize:", gene_options)
-
-    if limit < len(all_genes):
-        if st.button("🔄 Load More Heatmap Genes"):
-            st.session_state["gene_limit"] += 10
+    # Selectbox with search enabled
+    gene = st.selectbox(
+        "🔎 Type or select a gene to plot:",
+        options=gene_options
+    )
 
     plot_gene_heatmap(adata, gene)
+
 
 def render_marker_gene_table(adata):
     with st.expander("📌 Show Top Marker Genes per Cluster (Auto-Detected)"):
