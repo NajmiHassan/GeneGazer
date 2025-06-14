@@ -28,9 +28,9 @@ menu = st.sidebar.radio("Select a section:", ["📘 Instructions", "📁 Load Da
 if menu == "📘 Instructions":
     st.title("Single-Cell RNA-seq Viewer")
     st.markdown("""
-    This tool allows you to explore single-cell RNA-seq data easily:
+    This tool lets you explore single-cell RNA-seq data with ease:
 
-    1. Go to **Load Data** and upload a `.h5ad` file or use an example dataset.
+    1. Go to **Load Data** and upload a `.h5ad` file or use a sample dataset.
     2. Go to **Visualize** to generate interactive plots:
        - Clustering (UMAP)
        - Gene heatmap
@@ -54,7 +54,7 @@ elif menu == "📁 Load Data":
             adata = load_and_preprocess(adata)
             adata = apply_pca_umap_clustering(adata)
             st.session_state['adata'] = adata
-            st.success("File loaded and processed successfully!")
+            st.success("File successfully loaded and processed!")
         except Exception as e:
             st.error(f"Error during processing: {str(e)}")
 
@@ -68,7 +68,7 @@ elif menu == "📁 Load Data":
                 adata = load_and_preprocess(adata)
                 adata = apply_pca_umap_clustering(adata)
                 st.session_state['adata'] = adata
-                st.success("PBMC 3k loaded and processed!")
+                st.success("PBMC 3k successfully loaded and processed!")
             except Exception as e:
                 st.error(f"Error loading PBMC 3k: {str(e)}")
 
@@ -79,7 +79,7 @@ elif menu == "📁 Load Data":
                 adata = load_and_preprocess(adata)
                 adata = apply_pca_umap_clustering(adata)
                 st.session_state['adata'] = adata
-                st.success("Mouse brain cortex loaded and processed!")
+                st.success("Mouse brain cortex successfully loaded and processed!")
             except Exception as e:
                 st.error(f"Error loading mouse brain cortex: {str(e)}")
 
@@ -87,7 +87,7 @@ elif menu == "📊 Visualize":
     st.title("Visualizations")
 
     if 'adata' not in st.session_state:
-        st.warning("Please load a file in the 'Load Data' tab.")
+        st.warning("Please load a file from the 'Load Data' tab.")
     else:
         adata = st.session_state['adata']
         col1, col2 = st.columns(2)
@@ -110,7 +110,7 @@ elif menu == "🤖 AI Assistant":
     st.title("AI Assistant: Ask about RNA-seq")
 
     with st.chat_message("assistant"):
-        st.markdown("Hi! Ask me anything about RNA-seq, genes, or how to use this tool!")
+        st.markdown("Hi! Ask anything about RNA-seq, genes, or how to use this tool!")
 
     question = st.chat_input("Type your question here...")
     if question:
@@ -118,15 +118,15 @@ elif menu == "🤖 AI Assistant":
             st.markdown(question)
 
         with st.chat_message("assistant"):
-            q = question.lower()
-            if "gene" in q:
+            if "gene" in question.lower():
                 st.markdown("A gene is a DNA sequence that contains instructions to produce proteins.")
-            elif "umap" in q:
-                st.markdown("UMAP is a technique that reduces complex data to 2D for easier visualization.")
-            elif "h5ad" in q:
-                st.markdown("The `.h5ad` format is used by Scanpy to store gene expression data.")
+            elif "umap" in question.lower():
+                st.markdown("UMAP is a technique that reduces complex data into 2D for easier visualization.")
+            elif "h5ad" in question.lower():
+                st.markdown("`.h5ad` is a file format used by Scanpy to store gene expression data.")
             else:
-                st.markdown("I'm a simple assistant but can help with basic questions about RNA-seq.")
+                st.markdown("I'm a simple assistant, but I can help with basic RNA-seq questions.")
 
 st.markdown("---")
 st.info("Let's shine in this hackathon, team Goat!")
+
